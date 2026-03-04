@@ -1,8 +1,7 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Spreadsheet;
+using System.Threading.Tasks;
 using Serilog;
-
+using System;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -10,13 +9,53 @@ Log.Logger = new LoggerConfiguration()
 
 var workbook = GetDataClass.CreateWorkbook();
 var accessedWorksheet = GetDataClass.AccessWorkSheet(workbook);
+var accessData = new AccessData();
+var listOfURLObjects = accessData.GetURLObjects(accessedWorksheet);
+var downloadFolder = GetDataClass.DownloadFolder;
+
+
+await accessData.TryDownloadFromURLs(listOfURLObjects, downloadFolder);
 
 
 
 
-public static class AccessData
-{ 
-    public static List<URLObject> GetURLObjects(IXLWorksheet workSheet)
+public class AccessData
+{
+    public async Task TryDownloadFromURLs(List<URLObject> listOfURLObjects, string downloadFolder) 
+    {
+        foreach (var obj in listOfURLObjects)
+        {
+            if (!string.IsNullOrEmpty(obj.url1))
+            {
+                try 
+                {
+                    DownloadAsync(obj.url1, downloadFolder);
+                }
+                catch (HttpRequestException ex)
+                {
+                    Log.Error("Netværksfejl ved download: {URL} - {Message}", obj.url1, ex.Message);
+                }
+                catch (IOException ex)
+                {
+                    Log.Error("Fil-fejl ved download: {URL} - {Message}", obj.url1, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Ukendt fejl ved download: {URL} - {Message}", obj.url1, ex.Message);
+                }
+            }
+        }
+    }
+    public async Task DownloadAsync(string url, string downloadFolder)
+    {
+        using var client = new HttpClient();
+        using var response = await client.GetAsync(url);
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var fileStream = File.Create(downloadFolder);
+        await stream.CopyToAsync(fileStream);
+    }
+
+    public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
     {
         var listOfURLObjects = new List<URLObject>();
         var usedRange = workSheet.RangeUsed();

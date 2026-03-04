@@ -3,12 +3,22 @@ using Serilog;
 
 public class GetDataClass 
 {  
+    public static string ExcelFolder { get; set; }
+    public static string DownloadFolder { get; set; }
+
+    public static void SetDownloadFolder(string functionalFilePath ) 
+    {
+        ExcelFolder = Path.GetDirectoryName(functionalFilePath);
+        DownloadFolder = Path.Combine(ExcelFolder, "PDFs");
+    }
     public static XLWorkbook? CreateWorkbook()
     {
         Console.Write("Indtast filsti: ");
         string? inputFilePath = Console.ReadLine();
         var filePath = inputFilePath ?? throw new IOException("Unable to read inputFilePath");
         var functionalFilePath = GetFunctionalInputPath(filePath);
+        SetDownloadFolder(functionalFilePath);        
+
         XLWorkbook? workbook = null;
         try
         {
@@ -30,6 +40,7 @@ public class GetDataClass
         {
             inputPath = inputPath.Trim('"');
         }
+
         return inputPath;
     }
 
@@ -53,5 +64,7 @@ public class GetDataClass
             return null;
         }      
     }
+
+    
 }    
 
