@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Serilog;
 
 
@@ -7,40 +8,14 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
-
-Console.Write("Indtast filsti: ");
-string? inputFilePath = Console.ReadLine();
-var filePath = inputFilePath?? throw new IOException("Unable to read inputFilePath");
-var functionalFilePath = FileHelper.GetFunctionalInputPath(filePath);
-var workbook = new XLWorkbook(functionalFilePath);
-
-Console.Write("Hvilket nummer har det aktuelle worksheet?");
-string? inputWorkSheetNumber = Console.ReadLine(); 
-
-if(!int.TryParse(inputWorkSheetNumber, out int worksheetNumber)) 
-    throw new IOException("WorkSheetNumber must be an integer");
-int workSheetNumber = worksheetNumber;
-
-var worksheet = workbook.Worksheet(workSheetNumber);
+var workbook = GetDataClass.CreateWorkbook();
+var accessedWorksheet = GetDataClass.AccessWorkSheet(workbook);
 
 
 
 
-public static class FileHelper
-{
-    
-    public static string GetFunctionalInputPath(string input)
-    {
-        string? inputPath = input;
-        
-        var lastIndex = inputPath.Length - 1;
-        if (inputPath[0] == '"' && inputPath[lastIndex] == '"')
-        {
-            inputPath = inputPath.Trim('"');
-        }
-        return inputPath;
-    }
-
+public static class AccessData
+{ 
     public static List<URLObject> GetURLObjects(IXLWorksheet workSheet)
     {
         var listOfURLObjects = new List<URLObject>();
