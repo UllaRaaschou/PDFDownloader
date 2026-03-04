@@ -1,7 +1,8 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using System.Threading.Tasks;
 using Serilog;
 using System;
+using System.IO;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -13,11 +14,8 @@ var accessData = new AccessData();
 var listOfURLObjects = accessData.GetURLObjects(accessedWorksheet);
 var downloadFolder = GetDataClass.DownloadFolder;
 
-
-await accessData.TryDownloadFromURLs(listOfURLObjects, downloadFolder);
-
-
-
+accessData.TryDownloadFromURLs(listOfURLObjects, downloadFolder).Wait();
+Console.ReadLine();
 
 public class AccessData
 {
@@ -29,7 +27,8 @@ public class AccessData
             {
                 try 
                 {
-                    DownloadAsync(obj.url1, downloadFolder);
+                    await DownloadAsync(obj.url1, downloadFolder);
+                    Log.Information("Downloaded: {URL}", obj.url1);
                 }
                 catch (HttpRequestException ex)
                 {
@@ -51,19 +50,28 @@ public class AccessData
         using var client = new HttpClient();
         using var response = await client.GetAsync(url);
         using var stream = await response.Content.ReadAsStreamAsync();
-        using var fileStream = File.Create(downloadFolder);
+
+        var fileName = Path.GetFileName(url);
+        var filePath = Path.Combine(downloadFolder, fileName);
+        using var fileStream = File.Create(filePath);
+        
         await stream.CopyToAsync(fileStream);
     }
 
     public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
     {
+        if (workSheet == null)
+        {
+            Log.Error("Worksheet er null - kan ikke læse data");
+            return new List<URLObject>();
+        }
+        
         var listOfURLObjects = new List<URLObject>();
         var usedRange = workSheet.RangeUsed();
         Log.Information("Starter import af URL-objekter");
 
         if (usedRange != null)
         {
-
             foreach (var row in usedRange.Rows())
             {
                 if (row.RowNumber() == 1) continue;
@@ -74,7 +82,7 @@ public class AccessData
                 }
                 var lastCol = row.LastCellUsed()?.Address.ColumnNumber ?? 0;
                 var cell2AndCell3AreEmpty = lastCol<2 ? true : false;
-                                  
+                                   
                 if (cell2AndCell3AreEmpty) 
                 {
                     Log.Warning("Række {Row} mangler url", row.RowNumber());
@@ -93,4 +101,3 @@ public class AccessData
 }
 
 public record URLObject(int id, string? url1, string? url2);
-
