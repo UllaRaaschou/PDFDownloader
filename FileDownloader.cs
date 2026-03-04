@@ -2,10 +2,10 @@
 using Serilog;
 using PDFDownloader.Services;
 
-public partial class AccessData
+public partial class FileDownloader
 {
     private readonly IDownloadService _downloadService;
-    public AccessData(IDownloadService downloadService)
+    public FileDownloader(IDownloadService downloadService)
     {
         _downloadService = downloadService;
     }

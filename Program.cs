@@ -3,18 +3,18 @@ using Serilog;
 using System;
 using System.IO;
 using PDFDownloader.Services;
-using static AccessData;
+using static FileDownloader;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
-var workbook = GetDataClass.CreateWorkbook();
-var accessedWorksheet = GetDataClass.AccessWorkSheet(workbook);
+var workbook = GetDataAccess.CreateWorkbook();
+var accessedWorksheet = GetDataAccess.AccessWorkSheet(workbook);
 var httpDownloadService = new httpDownloadService();
-var accessData = new AccessData(httpDownloadService);
+var accessData = new FileDownloader(httpDownloadService);
 var listOfURLObjects = accessData.GetURLObjects(accessedWorksheet);
-var downloadFolder = GetDataClass.DownloadFolder;
+var downloadFolder = GetDataAccess.DownloadFolder;
 
 accessData.TryDownloadFromURLs(listOfURLObjects, downloadFolder).Wait();
 Console.ReadLine();

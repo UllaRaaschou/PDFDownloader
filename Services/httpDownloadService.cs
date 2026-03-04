@@ -1,6 +1,6 @@
 ﻿using PDFDownloader.Services;
 
-public partial class AccessData
+public partial class FileDownloader
 {
     public class httpDownloadService : IDownloadService 
     {
