@@ -1,35 +1,82 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
+using Serilog;
 
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
 
 Console.Write("Indtast filsti: ");
-var input = Console.ReadLine();
-var filePath = FileHelper.GetInputPath(input);
-Console.WriteLine(filePath);
-var workbook = new XLWorkbook(filePath);
+string? inputFilePath = Console.ReadLine();
+var filePath = inputFilePath?? throw new IOException("Unable to read inputFilePath");
+var functionalFilePath = FileHelper.GetFunctionalInputPath(filePath);
+var workbook = new XLWorkbook(functionalFilePath);
+
+Console.Write("Hvilket nummer har det aktuelle worksheet?");
+string? inputWorkSheetNumber = Console.ReadLine(); 
+
+if(!int.TryParse(inputWorkSheetNumber, out int worksheetNumber)) 
+    throw new IOException("WorkSheetNumber must be an integer");
+int workSheetNumber = worksheetNumber;
+
+var worksheet = workbook.Worksheet(workSheetNumber);
 
 
 
 
 public static class FileHelper
 {
-    public static string GetInputPath()
+    
+    public static string GetFunctionalInputPath(string input)
     {
-        string? inputPath = null;
-        try
-        {
-            inputPath = Console.ReadLine();
-        }
-        catch 
-        { 
-            throw new IOException("It was not possible to read inputPath")
-        }
+        string? inputPath = input;
+        
         var lastIndex = inputPath.Length - 1;
         if (inputPath[0] == '"' && inputPath[lastIndex] == '"')
         {
             inputPath = inputPath.Trim('"');
         }
-
         return inputPath;
     }
+
+    public static List<URLObject> GetURLObjects(IXLWorksheet workSheet)
+    {
+        var listOfURLObjects = new List<URLObject>();
+        var usedRange = workSheet.RangeUsed();
+        Log.Information("Starter import af URL-objekter");
+
+        if (usedRange != null)
+        {
+
+            foreach (var row in usedRange.Rows())
+            {
+                if (row.RowNumber() == 1) continue;
+                if (!row.Cell(1).Value.IsNumber)
+                {
+                    Log.Warning("Række {Row} mangler gyldigt ID", row.RowNumber());
+                    continue;
+                }
+                var lastCol = row.LastCellUsed()?.Address.ColumnNumber ?? 0;
+                var cell2AndCell3AreEmpty = lastCol<2 ? true : false;
+                                  
+                if (cell2AndCell3AreEmpty) 
+                {
+                    Log.Warning("Række {Row} mangler url", row.RowNumber());
+                    continue;
+                }                   
+
+                var id = (int)row.Cell(1).Value.GetNumber();
+                var url1 = row.Cell(2).Value.ToString();
+                var url2 = row.Cell(3).Value.ToString();
+
+                listOfURLObjects.Add(new URLObject(id, url1, url2));
+            }
+        }
+        return listOfURLObjects;
+    }
 }
+
+public record URLObject(int id, string? url1, string? url2);
+
