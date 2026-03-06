@@ -1,7 +1,9 @@
-﻿namespace PDFDownloader.Services
+﻿using static FileDownloader;
+
+namespace PDFDownloader.Services
 {
     public interface IDownloadService
     {
-        Task DownloadAsync(string url, string downloadFolder);
+        Task<DownloadResult> DownloadAsync(string url, string downloadFolder);
     }
 }

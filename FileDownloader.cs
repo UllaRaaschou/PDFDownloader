@@ -36,15 +36,22 @@ public partial class FileDownloader
         {
             try
             {
-                await _downloadService.DownloadAsync(usedUrl, downloadFolder);
+                var downloadResult = await _downloadService.DownloadAsync(usedUrl, downloadFolder);
+               
+                if (usedUrl == url1 && downloadResult.Success == false && !string.IsNullOrEmpty(url2))
+                {
+                    Log.Error("Download failure: {URL}", usedUrl);
+                    Methos(new URLObject(obj.id, "", url2), downloadFolder);
+                    
+                }
                 Log.Information("Downloaded: {URL}", usedUrl);
-                var count = Directory.EnumerateFiles(downloadFolder).Count();
 
             }
             catch (HttpRequestException ex)
             {
                 Log.Error("Netværksfejl ved download: {URL} - {Message}", usedUrl, ex.Message);
                 _failedDownloads.Add((usedUrl, ex.Message));
+
             }
             catch (IOException ex)
             {
