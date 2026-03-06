@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using Serilog;
 using PDFDownloader.Services;
+using System.Runtime.CompilerServices;
 
 public partial class FileDownloader
 {
@@ -15,36 +16,49 @@ public partial class FileDownloader
     {
         foreach (var obj in listOfURLObjects)
         {
-            if (!string.IsNullOrEmpty(obj.url1))
-            {
-                try 
-                {
-                    await _downloadService.DownloadAsync(obj.url1, downloadFolder);
-                    Log.Information("Downloaded: {URL}", obj.url1);
-                    
-                }
-                catch (HttpRequestException ex)
-                {
-                    Log.Error("Netværksfejl ved download: {URL} - {Message}", obj.url1, ex.Message);
-                    _failedDownloads.Add((obj.url1, ex.Message));
-                }
-                catch (IOException ex)
-                {
-                    Log.Error("Fil-fejl ved download: {URL} - {Message}", obj.url1, ex.Message);
-                    _failedDownloads.Add((obj.url1, ex.Message));
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Ukendt fejl ved download: {URL} - {Message}", obj.url1, ex.Message);
-                    _failedDownloads.Add((obj.url1, ex.Message));
-                }
-            }
+            await Methos(obj, downloadFolder);        
         }
+        
         var lines = _failedDownloads.Select(x => $"{x.url} - {x.error}");
         var filePath = Path.Combine(downloadFolder, "failed_downloads.txt");
+        Directory.CreateDirectory(downloadFolder);
         File.WriteAllLines(filePath, lines);
+        var count = Directory.EnumerateFiles(downloadFolder).Count();
     }
-    
+
+    private async Task Methos(URLObject obj, string downloadFolder)
+    {
+        var url1 = obj.url1;
+        var url2 = obj.url2;
+
+        var usedUrl = string.IsNullOrEmpty(url1)? url2 : url1;
+        if (!string.IsNullOrEmpty(usedUrl))
+        {
+            try
+            {
+                await _downloadService.DownloadAsync(usedUrl, downloadFolder);
+                Log.Information("Downloaded: {URL}", usedUrl);
+                var count = Directory.EnumerateFiles(downloadFolder).Count();
+
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.Error("Netværksfejl ved download: {URL} - {Message}", usedUrl, ex.Message);
+                _failedDownloads.Add((usedUrl, ex.Message));
+            }
+            catch (IOException ex)
+            {
+                Log.Error("Fil-fejl ved download: {URL} - {Message}", usedUrl, ex.Message);
+                _failedDownloads.Add((usedUrl, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Ukendt fejl ved download: {URL} - {Message}", usedUrl, ex.Message);
+                _failedDownloads.Add((usedUrl, ex.Message));
+            }
+        }
+
+    }
 
     public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
     {
