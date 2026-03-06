@@ -4,10 +4,11 @@ public partial class FileDownloader
 {
     public class httpDownloadService : IDownloadService 
     {
-        public async Task<DownloadResult> DownloadAsync(string url, string downloadFolder)
+        public async Task DownloadAsync(string url, string downloadFolder)
         {
             using var client = new HttpClient();
             using var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
             using var stream = await response.Content.ReadAsStreamAsync();
 
             var fileName = Path.GetFileName(url);
@@ -15,7 +16,7 @@ public partial class FileDownloader
             using var fileStream = File.Create(filePath);
 
             await stream.CopyToAsync(fileStream);
-            return new DownloadResult(true, fileName, null);
+            //return new DownloadResult(true, fileName, null);
         }
     }
 

@@ -30,41 +30,81 @@ public partial class FileDownloader
     {
         var url1 = obj.url1;
         var url2 = obj.url2;
+        bool succes = false;
+        var firstErrorType = "";
+        var secondErrorType = "";
 
-        var usedUrl = string.IsNullOrEmpty(url1)? url2 : url1;
-        if (!string.IsNullOrEmpty(usedUrl))
+        bool firstUsedUrlFailed = false; 
+        var firstErrorMessage = string.Empty;
+
+        //var usedUrl = string.IsNullOrEmpty(url1)? url2 : url1;
+        if (!string.IsNullOrEmpty(url1))
         {
             try
             {
-                var downloadResult = await _downloadService.DownloadAsync(usedUrl, downloadFolder);
-               
-                if (usedUrl == url1 && downloadResult.Success == false && !string.IsNullOrEmpty(url2))
-                {
-                    Log.Error("Download failure: {URL}", usedUrl);
-                    Methos(new URLObject(obj.id, "", url2), downloadFolder);
-                    
-                }
-                Log.Information("Downloaded: {URL}", usedUrl);
-
-            }
-            catch (HttpRequestException ex)
-            {
-                Log.Error("Netværksfejl ved download: {URL} - {Message}", usedUrl, ex.Message);
-                _failedDownloads.Add((usedUrl, ex.Message));
-
-            }
-            catch (IOException ex)
-            {
-                Log.Error("Fil-fejl ved download: {URL} - {Message}", usedUrl, ex.Message);
-                _failedDownloads.Add((usedUrl, ex.Message));
+                await _downloadService.DownloadAsync(url1, downloadFolder);
+                Log.Information("Downloaded: {URL}", url1);
+                succes = true;
+                return;
             }
             catch (Exception ex)
             {
-                Log.Error("Ukendt fejl ved download: {URL} - {Message}", usedUrl, ex.Message);
-                _failedDownloads.Add((usedUrl, ex.Message));
+                firstErrorMessage = ex.Message;
+                firstErrorType = ex.GetType().Name;
+                firstUsedUrlFailed = true;
             }
+        
+            if(succes == false && !string.IsNullOrEmpty(url2))
+                try 
+                {
+                    await _downloadService.DownloadAsync(url2, downloadFolder);
+                    Log.Information("DownloadFailure {ExType}: {URL1}, Downloaded: {URL2}",firstErrorType, url1, url2);
+                    succes = true;
+                    return;
+                }
+
+                catch (HttpRequestException ex)
+                {
+                    Log.Error("DownloadFailure {ExType}: {URL1}, Netværksfejl ved download: {URL2} - {Message}", firstErrorType, url1, url2, ex.Message);                
+
+                }
+                catch (IOException ex)
+                {
+                    Log.Error("DownloadFailure {ExType}: {URL1}, Fil-fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+                    
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("DownloadFailure {ExType}: {URL1},, Ukendt fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+                   
+                }
+            _failedDownloads.Add((url1, firstErrorMessage));
+        }
+        firstUsedUrlFailed = true;
+        try
+        {
+            await _downloadService.DownloadAsync(url2, downloadFolder);
+            Log.Information("DownloadFailure {ExType}: {URL1}, Downloaded: {URL2}", firstErrorType, url1, url2);
+            succes = true;
+            return;
         }
 
+        catch (HttpRequestException ex)
+        {
+            Log.Error("DownloadFailure {ExType}: {URL1}, Netværksfejl ved download: {URL2} - {Message}", firstErrorType, url1, url2, ex.Message);
+
+        }
+        catch (IOException ex)
+        {
+            Log.Error("DownloadFailure {ExType}: {URL1}, Fil-fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error("DownloadFailure {ExType}: {URL1},, Ukendt fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+
+        }
+        _failedDownloads.Add((url1, firstErrorMessage));
     }
 
     public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
