@@ -21,6 +21,7 @@ var downloadFolder = GetDataAccess.DownloadFolder;
 var wantTjeck = GetDataAccess.WantCheckForFormerDownloads();
 
 fileDownloader.TryDownloadFromURLs(listOfURLObjects, downloadFolder, wantTjeck).Wait();
+fileDownloader.WriteToExcel(downloadFolder);
 Console.WriteLine(Path.GetTempPath());
 Console.ReadLine();
 

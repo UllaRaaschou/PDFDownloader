@@ -57,6 +57,7 @@ public partial class FileDownloader
                 _succeededDownloads.Add(url1);
                 Log.Information("Downloaded: {URL}", url1);
                 succes = true;
+                WriteToExcel(downloadFolder);
                 return;
             }
             catch (Exception ex)
@@ -155,6 +156,38 @@ public partial class FileDownloader
             }
         }
         return listOfURLObjects.OrderBy(x => x.id).ToList();
+    }
+
+    public void WriteToExcel(string downloadFolder)
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("Data");
+
+        var row = 1;
+        sheet.Cell(row++, 1).Value = "Ikke-downloadet: ";
+
+        foreach (var item in _failedDownloads)
+        {
+            sheet.Cell(row, 1).Value = item.Item1;
+            sheet.Cell(row, 2).Value = item.Item2;
+            row++;
+        }
+
+        row++;
+
+        sheet.Cell(row++, 1).Value = "Downloadet:";
+
+       
+        foreach (var item in _succeededDownloads)
+        {
+            sheet.Cell(row++, 1).Value = item;
+        }
+
+        var path = Path.Combine(downloadFolder, "Oversigt.xlsx");
+        Directory.CreateDirectory(downloadFolder);
+        workbook.SaveAs(path);
+        
+
     }
 
 }
