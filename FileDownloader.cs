@@ -4,33 +4,43 @@ using PDFDownloader.Services;
 using System.Runtime.CompilerServices;
 using DocumentFormat.OpenXml.Bibliography;
 using PDFDownloader.Data;
+using System.Collections.Concurrent;
+using DocumentFormat.OpenXml.Office2021.DocumentTasks;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 public partial class FileDownloader
 {
     private readonly IDownloadService _downloadService;
-    private List<string> _succeededDownloads;
-    private List<(string url, string error)> _failedDownloads;
+    private ConcurrentBag<string> _succeededDownloads;
+    private ConcurrentBag<(string url, string error)> _failedDownloads;
     private readonly IUniversalDownloadetFiles _universalDownloadetFiles;
 
     public FileDownloader(IDownloadService downloadService, IUniversalDownloadetFiles uni)
     {
         _downloadService = downloadService;
-        _failedDownloads = new List<(string url, string error)> { };
+        _failedDownloads = new ConcurrentBag<(string url, string error)> { };
         _universalDownloadetFiles = uni;
-        _succeededDownloads = new List<string> { };
+        _succeededDownloads = new ConcurrentBag<string> { };
     }
     public async Task TryDownloadFromURLs(List<URLObject> listOfURLObjects, string downloadFolder, bool wantTjeck) 
     {
+        var tasks = new List<System.Threading.Tasks.Task>();
+
         foreach (var obj in listOfURLObjects)
         {
-
             if (wantTjeck &&
-            (_universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
-            _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))) { continue; }
+                (_universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
+                 _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? "")))
+            {
+                continue;
+            }
 
-            await Methos(obj, downloadFolder);        
+            tasks.Add(Methos(obj, downloadFolder));
         }
-        
+
+        await Task.WhenAll(tasks);
+
         var lines = _failedDownloads.Select(x => $"{x.url} - {x.error}");
         var filePath = Path.Combine(downloadFolder, "failed_downloads.txt");
         Directory.CreateDirectory(downloadFolder);
@@ -56,8 +66,7 @@ public partial class FileDownloader
                 await _downloadService.DownloadAsync(url1, downloadFolder);
                 _succeededDownloads.Add(url1);
                 Log.Information("Downloaded: {URL}", url1);
-                succes = true;
-                WriteToExcel(downloadFolder);
+                succes = true;                
                 return;
             }
             catch (Exception ex)
@@ -71,8 +80,11 @@ public partial class FileDownloader
             {
                 (succes, var _localSuccesList) = await TryUrl2(url2, downloadFolder, firstErrorType, url1, firstErrorMessage);
                 if (succes)
-                    _succeededDownloads.AddRange(_localSuccesList);
-                if(!succes)
+                    foreach (var item in _localSuccesList)
+                    {
+                        _succeededDownloads.Add(item);
+                    }
+                if (!succes)
                     _failedDownloads.Add((url1, firstErrorMessage));
             }  
         }

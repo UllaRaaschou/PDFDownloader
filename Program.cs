@@ -24,5 +24,6 @@ fileDownloader.TryDownloadFromURLs(listOfURLObjects, downloadFolder, wantTjeck).
 fileDownloader.WriteToExcel(downloadFolder);
 Console.WriteLine(Path.GetTempPath());
 Console.ReadLine();
+Console.WriteLine("Done!!!");
 
 public record URLObject(int id, string? url1, string? url2);
