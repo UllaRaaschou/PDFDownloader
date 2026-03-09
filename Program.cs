@@ -10,15 +10,16 @@ using Serilog.Sinks.File; // Add this using directive for Serilog File sink
 Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/download.log")
     .CreateLogger();
-
-var workbook = GetDataAccess.CreateWorkbook();
-var accessedWorksheet = GetDataAccess.AccessWorkSheet(workbook);
+var access = new GetDataAccess();
+var workbook = access.CreateWorkbook();
+var accessedWorksheet = access.AccessWorkSheet(workbook);
 var uni = new UniversalDownloadedFiles();
 var httpDownloadService = new httpDownloadService(uni);
-var fileDownloader = new FileDownloader(httpDownloadService, uni);
+
+var fileDownloader = new FileDownloader(httpDownloadService, uni, access);
 var listOfURLObjects = fileDownloader.GetURLObjects(accessedWorksheet);
-var downloadFolder = GetDataAccess.DownloadFolder;
-var wantTjeck = GetDataAccess.WantCheckForFormerDownloads();
+var downloadFolder = access.DownloadFolder;
+var wantTjeck = access.WantCheckForFormerDownloads();
 
 fileDownloader.TryDownloadFromURLs(listOfURLObjects, downloadFolder, wantTjeck).Wait();
 fileDownloader.WriteToExcel(downloadFolder);

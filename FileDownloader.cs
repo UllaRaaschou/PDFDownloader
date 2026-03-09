@@ -13,15 +13,17 @@ public partial class FileDownloader
 {
     private readonly IDownloadService _downloadService;
     private ConcurrentBag<string> _succeededDownloads;
+    private readonly GetDataAccess _access;
     private ConcurrentBag<(string url, string error)> _failedDownloads;
     private readonly IUniversalDownloadetFiles _universalDownloadetFiles;
 
-    public FileDownloader(IDownloadService downloadService, IUniversalDownloadetFiles uni)
+    public FileDownloader(IDownloadService downloadService, IUniversalDownloadetFiles uni, GetDataAccess access)
     {
         _downloadService = downloadService;
         _failedDownloads = new ConcurrentBag<(string url, string error)> { };
         _universalDownloadetFiles = uni;
         _succeededDownloads = new ConcurrentBag<string> { };
+        _access = access;
     }
     public async Task TryDownloadFromURLs(List<URLObject> listOfURLObjects, string downloadFolder, bool wantTjeck) 
     {

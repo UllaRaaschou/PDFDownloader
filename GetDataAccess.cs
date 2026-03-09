@@ -3,15 +3,15 @@ using Serilog;
 
 public class GetDataAccess 
 {  
-    public static string ExcelFolder { get; set; }
-    public static string DownloadFolder { get; set; }
+    public string ExcelFolder { get; set; }
+    public string DownloadFolder { get; set; }
 
-    public static void SetDownloadFolder(string functionalFilePath ) 
+    public void SetDownloadFolder(string functionalFilePath ) 
     {
         ExcelFolder = Path.GetDirectoryName(functionalFilePath);
         DownloadFolder = Path.Combine(ExcelFolder, "PDFs");
     }
-    public static XLWorkbook? CreateWorkbook()
+    public XLWorkbook? CreateWorkbook()
     {
         Console.Write("Indtast filsti: ");
         string? inputFilePath = Console.ReadLine();
@@ -31,7 +31,7 @@ public class GetDataAccess
         }
     }
 
-    public static string GetFunctionalInputPath(string input)
+    public string GetFunctionalInputPath(string input)
     {
         string? inputPath = input;
 
@@ -44,7 +44,7 @@ public class GetDataAccess
         return inputPath;
     }
 
-    public static IXLWorksheet? AccessWorkSheet(XLWorkbook workbook)
+    public IXLWorksheet? AccessWorkSheet(XLWorkbook workbook)
     {
         Console.Write("Hvilket nummer har det aktuelle worksheet?");
         string? inputWorkSheetNumber = Console.ReadLine();
@@ -65,7 +65,7 @@ public class GetDataAccess
         }      
     }
 
-    public static bool WantCheckForFormerDownloads() 
+    public bool WantCheckForFormerDownloads() 
     {
         Console.Write("Skal jeg kun downloade filer, hvis de ikke allerede er downloadet tidligere? (j/n): ");
         var result = Console.ReadLine()?.ToLower();
