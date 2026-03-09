@@ -65,6 +65,18 @@ public class GetDataAccess
         }      
     }
 
+    public static bool WantCheckForFormerDownloads() 
+    {
+        Console.Write("Skal jeg kun downloade filer, hvis de ikke allerede er downloadet tidligere? (j/n): ");
+        var result = Console.ReadLine()?.ToLower();
+        while (result != "j" && result != "n")
+        {
+            Console.Write("Ugyldigt svar. Skriv 'j' for ja eller 'n' for nej: ");
+            result = Console.ReadLine()?.ToLower();
+        }
+        return result == "j";
+    }
+
     
 }    
 

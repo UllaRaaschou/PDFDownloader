@@ -2,20 +2,32 @@
 using Serilog;
 using PDFDownloader.Services;
 using System.Runtime.CompilerServices;
+using DocumentFormat.OpenXml.Bibliography;
+using PDFDownloader.Data;
 
 public partial class FileDownloader
 {
     private readonly IDownloadService _downloadService;
+    private List<string> _succeededDownloads;
     private List<(string url, string error)> _failedDownloads;
-    public FileDownloader(IDownloadService downloadService)
+    private readonly IUniversalDownloadetFiles _universalDownloadetFiles;
+
+    public FileDownloader(IDownloadService downloadService, IUniversalDownloadetFiles uni)
     {
         _downloadService = downloadService;
         _failedDownloads = new List<(string url, string error)> { };
+        _universalDownloadetFiles = uni;
+        _succeededDownloads = new List<string> { };
     }
-    public async Task TryDownloadFromURLs(List<URLObject> listOfURLObjects, string downloadFolder) 
+    public async Task TryDownloadFromURLs(List<URLObject> listOfURLObjects, string downloadFolder, bool wantTjeck) 
     {
         foreach (var obj in listOfURLObjects)
         {
+
+            if (wantTjeck &&
+            (_universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
+            _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))) { continue; }
+
             await Methos(obj, downloadFolder);        
         }
         
@@ -37,12 +49,12 @@ public partial class FileDownloader
         bool firstUsedUrlFailed = false; 
         var firstErrorMessage = string.Empty;
 
-        //var usedUrl = string.IsNullOrEmpty(url1)? url2 : url1;
         if (!string.IsNullOrEmpty(url1))
         {
             try
             {
                 await _downloadService.DownloadAsync(url1, downloadFolder);
+                _succeededDownloads.Add(url1);
                 Log.Information("Downloaded: {URL}", url1);
                 succes = true;
                 return;
@@ -54,58 +66,55 @@ public partial class FileDownloader
                 firstUsedUrlFailed = true;
             }
         
-            if(succes == false && !string.IsNullOrEmpty(url2))
-                try 
-                {
-                    await _downloadService.DownloadAsync(url2, downloadFolder);
-                    Log.Information("DownloadFailure {ExType}: {URL1}, Downloaded: {URL2}",firstErrorType, url1, url2);
-                    succes = true;
-                    return;
-                }
-
-                catch (HttpRequestException ex)
-                {
-                    Log.Error("DownloadFailure {ExType}: {URL1}, Netværksfejl ved download: {URL2} - {Message}", firstErrorType, url1, url2, ex.Message);                
-
-                }
-                catch (IOException ex)
-                {
-                    Log.Error("DownloadFailure {ExType}: {URL1}, Fil-fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
-                    
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("DownloadFailure {ExType}: {URL1},, Ukendt fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
-                   
-                }
-            _failedDownloads.Add((url1, firstErrorMessage));
+            if(succes == false && !string.IsNullOrEmpty(url2)) 
+            {
+                (succes, var _localSuccesList) = await TryUrl2(url2, downloadFolder, firstErrorType, url1, firstErrorMessage);
+                if (succes)
+                    _succeededDownloads.AddRange(_localSuccesList);
+                if(!succes)
+                    _failedDownloads.Add((url1, firstErrorMessage));
+            }  
         }
-        firstUsedUrlFailed = true;
+        await TryUrl2(url2, downloadFolder, null, null, null);
+
+
+
+    }
+
+    public async Task<(bool, List<string>)> TryUrl2(string url2, string downloadFolder, string? firstErrorType, string? url1, string? firstErrorMessage) 
+    {
+        var _localSuccesList = new List<string>();
         try
         {
             await _downloadService.DownloadAsync(url2, downloadFolder);
-            Log.Information("DownloadFailure {ExType}: {URL1}, Downloaded: {URL2}", firstErrorType, url1, url2);
-            succes = true;
-            return;
+            _localSuccesList.Add(url2); 
+            Log.Information("Downloaded: {URL2}", url2);
+            return (true, _localSuccesList);
+            
         }
 
         catch (HttpRequestException ex)
         {
             Log.Error("DownloadFailure {ExType}: {URL1}, Netværksfejl ved download: {URL2} - {Message}", firstErrorType, url1, url2, ex.Message);
+            return (false, _localSuccesList);
 
         }
         catch (IOException ex)
         {
             Log.Error("DownloadFailure {ExType}: {URL1}, Fil-fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+            return (false, _localSuccesList);
 
         }
         catch (Exception ex)
         {
             Log.Error("DownloadFailure {ExType}: {URL1},, Ukendt fejl ved download: {URL2} - {Message}", url1, url2, ex.Message);
+            return (false, _localSuccesList);
 
         }
-        _failedDownloads.Add((url1, firstErrorMessage));
+        
+
     }
+
 
     public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
     {
