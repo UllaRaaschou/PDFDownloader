@@ -1,6 +1,6 @@
 using Serilog;
 using PDFDownloader.Data;
-using PDFDownloader; // Add this using directive for Serilog File sink
+using PDFDownloader;
 internal class Program
 {
     private static async Task Main(string[] args)
