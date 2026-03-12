@@ -1,4 +1,4 @@
-﻿using static FileDownloader;
+﻿using static DownloadPreparer;
 
 namespace PDFDownloader.Services
 {

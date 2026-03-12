@@ -1,7 +1,7 @@
 ﻿using ClosedXML.Excel;
 using Serilog;
 
-public class GetDataAccess 
+public class DataAccessService 
 {  
     public string ExcelFolder { get; set; }
     public string DownloadFolder { get; set; }
