@@ -11,7 +11,7 @@ namespace PDFDownloader
         private readonly WorkBookService _workBookService;
         private readonly DownloadPreparer _preparer;
         private readonly DownloadService _downloadService;
-        private readonly IUniversalDownloadedFiles _universalDownloadedFiles;
+        private readonly IDownloadHistory _downloadHistory;
 
         public ApplicationOrchestrator(
             InputService inputService,
@@ -19,14 +19,14 @@ namespace PDFDownloader
             WorkBookService workBookService,
             DownloadPreparer preparer,
             DownloadService downloadService,
-            IUniversalDownloadedFiles universalDownloadedFiles)
+            IDownloadHistory downloadHistory)
         {
             _inputService = inputService;
             _outputExcelService = outputExcelService;
             _workBookService = workBookService;
             _preparer = preparer;
             _downloadService = downloadService;
-            _universalDownloadedFiles = universalDownloadedFiles;
+            _downloadHistory = downloadHistory;
         }
 
         public async Task<bool> RunAsync()
@@ -51,11 +51,9 @@ namespace PDFDownloader
                 await _downloadService.DownloadAllAsync(notDownloadedBefore, downloadFolder);
 
                 Console.WriteLine("Starting WriteToExcel...");
-                var writer = new ExcelWriter(
-                    downloadFolder,
-                    _downloadService._failedDownloads,
-                    _downloadService._succeededDownloads);
-                await writer.WriteToExcel(downloadFolder);
+
+                var writer = _downloadService.CreateResultWriter(outputExcelFolder);
+                await writer.WriteToExcel();               
                 Console.WriteLine("WriteToExcel completed!");
 
                 return true;

@@ -9,22 +9,13 @@ using System.Threading.Tasks;
 namespace PDFDownloader.Services
 {
     public class WorkBookService
-    {
-        string _functionalFilePath = string.Empty;
-
-        public string DownloadFolder { get; set; } = string.Empty;
-
+    {   
         public WorkBookService() { }
-       
-
-
         public string SetDownloadFolder(string functionalFilePath)
         {
             var directory = Path.GetDirectoryName(functionalFilePath) ?? string.Empty;
             return Path.Combine(directory, "PDFs");
         }
-
-
 
         /// <summary>
         /// Creates XLworkbook from userinput
@@ -33,12 +24,6 @@ namespace PDFDownloader.Services
         /// <exception cref="IOException"></exception>
         public XLWorkbook? CreateWorkbook(string functionalFilePath)
         {
-            //Console.Write("Indtast filsti: ");
-            //string? inputFilePath = Console.ReadLine();
-            //var filePath = inputFilePath ?? throw new IOException("Unable to read inputFilePath");
-            //var functionalFilePath = GetFunctionalInputPath(filePath);
-            SetDownloadFolder(functionalFilePath);
-
             XLWorkbook? workbook = null;
             try
             {
@@ -59,13 +44,6 @@ namespace PDFDownloader.Services
         /// <exception cref="IOException"></exception>
         public IXLWorksheet? TryAccessWorkSheet(XLWorkbook workbook, int workSheetNumber)
         {
-            //Console.Write("Hvilket nummer har det aktuelle worksheet?");
-            //string? inputWorkSheetNumber = Console.ReadLine();
-
-            //if (!int.TryParse(inputWorkSheetNumber, out int worksheetNumber))
-            //    throw new IOException("WorkSheetNumber must be an integer");
-            //int workSheetNumber = worksheetNumber;
-
             try
             {
                 var worksheet = workbook.Worksheet(workSheetNumber);

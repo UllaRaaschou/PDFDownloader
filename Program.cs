@@ -9,20 +9,20 @@ internal class Program
         Log.Logger = new LoggerConfiguration()
         .WriteTo.File("logs/download.log")
         .CreateLogger();
-        var uni = new UniversalDownloadedFiles();
+        var history = new DownloadHistory();
         var httpClient = new HttpClient();
         var inputService = new InputService();
         var outputService = new OutputExcelService();
         var workBookService = new WorkBookService();
-        var preparer = new DownloadPreparer(uni);
-        var downloadService = new DownloadService(uni, httpClient);
+        var preparer = new DownloadPreparer(history);
+        var downloadService = new DownloadService(history, httpClient);
         var orchestrator = new ApplicationOrchestrator(
             inputService,
             outputService,
             workBookService,
             preparer,
             downloadService,
-            uni);
+            history);
         var success = await orchestrator.RunAsync();
         if (success)
         {

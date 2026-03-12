@@ -7,13 +7,13 @@ using System.Collections.Concurrent;
     
 public class DownloadService : IDownloadService 
 {
-    private IUniversalDownloadedFiles _uni;
+    private IDownloadHistory _history;
     private readonly HttpClient _httpClient;
-    public ConcurrentBag<(string url, string error)> _failedDownloads;
-    public ConcurrentBag<string> _succeededDownloads;
-    public DownloadService(IUniversalDownloadedFiles uni, HttpClient httpClient)
+    private ConcurrentBag<(string url, string error)> _failedDownloads;
+    private ConcurrentBag<string> _succeededDownloads;
+    public DownloadService(IDownloadHistory history, HttpClient httpClient)
     {
-        _uni = uni;
+        _history = history;
         _httpClient = httpClient;
         _failedDownloads = new ConcurrentBag<(string url, string error)> { };
         _succeededDownloads = new ConcurrentBag<string> { };
@@ -60,7 +60,7 @@ public class DownloadService : IDownloadService
         }
 
         var downloadedFiles =  new List<string> {url};
-        _uni.UniDownloadedFiles.AddRange(downloadedFiles);
+        _history.PreviousDownloadedFiles.AddRange(downloadedFiles);
     }
 
     private async Task DownloadWithFallbackAsync(PDFLinkObject obj, string downloadFolder)
@@ -177,9 +177,8 @@ public class DownloadService : IDownloadService
         }
     }
 
-
-
-    public record DownloadResult(bool Success, string? FileName, string? ErrorMessage);
-    
-
+    public ExcelWriter CreateResultWriter(string downloadFolder)
+    {
+        return new ExcelWriter(downloadFolder, _failedDownloads, _succeededDownloads);
+    }
 }

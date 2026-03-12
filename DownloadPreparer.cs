@@ -6,12 +6,11 @@ using PDFDownloader;
 
 public partial class DownloadPreparer
 {     
-    private readonly IUniversalDownloadedFiles _universalDownloadedFiles;
-    
+    private readonly IDownloadHistory _previousDownloadedFiles;    
 
-    public DownloadPreparer(IUniversalDownloadedFiles uni)
+    public DownloadPreparer(IDownloadHistory history)  
     {
-        _universalDownloadedFiles = uni;           
+        _previousDownloadedFiles = history;           
     }
 
    public List<PDFLinkObject> PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantCheck) 
@@ -31,8 +30,8 @@ public partial class DownloadPreparer
         foreach (var obj in listOfURLObjects)
         {
             if (
-                _universalDownloadedFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
-                _universalDownloadedFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))
+                _previousDownloadedFiles.PreviousDownloadedFiles.Contains(obj.url1 ?? "") ||
+                _previousDownloadedFiles.PreviousDownloadedFiles.Contains(obj.url2 ?? ""))
             {
                 continue;
             }

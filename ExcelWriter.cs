@@ -5,19 +5,19 @@ namespace PDFDownloader
 {
     public class ExcelWriter
     {
-        private readonly string _downloadFolder;
+        private readonly string outputFolder;
         private ConcurrentBag<(string url, string error)> _failedDownloads;
         private ConcurrentBag<string> _succeededDownloads;
 
 
-        public ExcelWriter(string downloadFolder, ConcurrentBag<(string url, string error)> failedDownloads,
+        public ExcelWriter(string outputExcelFolder, ConcurrentBag<(string url, string error)> failedDownloads,
             ConcurrentBag<string> succeededDownloads)
         {
-            _downloadFolder = downloadFolder;
+            outputFolder = outputExcelFolder;
             _failedDownloads = failedDownloads;
             _succeededDownloads = succeededDownloads;
         }
-        public async Task WriteToExcel(string downloadFolder)
+        public async Task WriteToExcel()
         {
             using var workbook = new XLWorkbook();
             var sheet = workbook.Worksheets.Add("Data");
@@ -42,9 +42,8 @@ namespace PDFDownloader
                 sheet.Cell(row++, 1).Value = item;
             }
 
-            var oversigtsFolder = Path.Combine(downloadFolder, "DownloadOversigt");
-            Directory.CreateDirectory(oversigtsFolder);
-            var path = Path.Combine(oversigtsFolder, "Oversigt.xlsx");
+            Directory.CreateDirectory(outputFolder);
+            var path = Path.Combine(outputFolder, "Oversigt.xlsx");
             workbook.SaveAs(path);
 
             await Task.CompletedTask;

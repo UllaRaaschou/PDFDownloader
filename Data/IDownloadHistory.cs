@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace PDFDownloader.Data
 {
-    public interface IUniversalDownloadedFiles
+    public interface IDownloadHistory
+
     {
-        public List<string> UniDownloadedFiles { get; set; } 
+        public List<string> PreviousDownloadedFiles { get; set; } 
     }
 }
