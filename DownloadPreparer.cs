@@ -1,62 +1,66 @@
 ﻿using ClosedXML.Excel;
 using Serilog;
-using PDFDownloader.Services;
 using PDFDownloader.Data;
 using System.Collections.Concurrent;
-using Task = System.Threading.Tasks.Task;
+using PDFDownloader;
 
 public partial class DownloadPreparer
-{
-    //private readonly IDownloadService _downloadService;
-    public ConcurrentBag<string> _succeededDownloads;
-    private readonly DataAccessService _access;
-   
+{   
+    public ConcurrentBag<string>? _succeededDownloads; 
     private readonly IUniversalDownloadetFiles _universalDownloadetFiles;
+    private readonly DataAccessService _access;
 
-    public DownloadPreparer(/*IDownloadService downloadService, */IUniversalDownloadetFiles uni, DataAccessService access)
+    public DownloadPreparer(IUniversalDownloadetFiles uni, DataAccessService access)
     {
-        //_downloadService = downloadService;
-        //_failedDownloads = new ConcurrentBag<(string url, string error)> { };
-        _universalDownloadetFiles = uni;
-        //_succeededDownloads = new ConcurrentBag<string> { };
+        _universalDownloadetFiles = uni;    
         _access = access;
     }
 
-   public async Task PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantTjeck) 
+   public async Task<List<PDFLinkObject>> PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantTjeck) 
     { 
-        var listOfURLObjects = GetURLObjects(workSheet);
-        var NotDownloadetBefore = PerformEarlierDownloadetStatus(listOfURLObjects, downloadFolder, wantTjeck);
+        var listOfPDFLinkObjects = GetPDFLinkObjectsFromWorksheet(workSheet);
+        var notDownloadetBefore = new List<PDFLinkObject>();
+        if (wantTjeck == true)
+        {
+            notDownloadetBefore = ReturnListOfPDFLinksNotDownloadetBefore(listOfPDFLinkObjects);
+        }
+        notDownloadetBefore = listOfPDFLinkObjects;
+        return notDownloadetBefore;
     }
 
-    public List<URLObject> PerformEarlierDownloadetStatus(List<URLObject> listOfURLObjects, string downloadFolder, bool wantTjeck)
+    public List<PDFLinkObject> ReturnListOfPDFLinksNotDownloadetBefore(List<PDFLinkObject> listOfURLObjects)
     {
-        var notDownloadetBefore = new List<URLObject>();
-
+        var notDownloadetBefore = new List<PDFLinkObject>();
         foreach (var obj in listOfURLObjects)
         {
-            if (wantTjeck &&
-                (_universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
-                 _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? "")))
+            if (
+                _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
+                _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))
             {
                 continue;
             }
-
             notDownloadetBefore.Add(obj);        
         }
         return notDownloadetBefore;
     }
 
-    public List<URLObject> GetURLObjects(IXLWorksheet workSheet)
+    /// <summary>
+    /// Returns a list of PDFLinkObjects made from user-input excell.
+    /// If data is not readable or if ID or all URL's are missing, warnings are logged but procedure continues.
+    /// </summary>
+    /// <param name="workSheet"></param>
+    /// <returns></returns>
+    public List<PDFLinkObject> GetPDFLinkObjectsFromWorksheet(IXLWorksheet workSheet)
     {
         if (workSheet == null)
         {
             Log.Error("Worksheet er null - kan ikke læse data");
-            return new List<URLObject>();
+            return new List<PDFLinkObject>();
         }
         
-        var listOfURLObjects = new List<URLObject>();
+        var listOfPDFLinkObjects = new List<PDFLinkObject>();
         var usedRange = workSheet.RangeUsed();
-        Log.Information("Starter import af URL-objekter");
+        Log.Information("Starter import af PDFLink-objekter");
 
         if (usedRange != null)
         {
@@ -81,13 +85,9 @@ public partial class DownloadPreparer
                 var url1 = row.Cell(2).Value.ToString();
                 var url2 = row.Cell(3).Value.ToString();
 
-                listOfURLObjects.Add(new URLObject(id, url1, url2));
+                listOfPDFLinkObjects.Add(new PDFLinkObject(id, url1, url2));
             }
         }
-        return listOfURLObjects.OrderBy(x => x.id).ToList();
+        return listOfPDFLinkObjects.OrderBy(x => x.id).ToList();
     }
-
-    
-    
-
 }

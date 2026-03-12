@@ -24,13 +24,14 @@ var httpClient = new HttpClient();
 
 
 var preparer = new DownloadPreparer(uni, access);
-var listOfURLObjects = preparer.GetURLObjects(accessedWorksheet);
+var listOfURLObjects = preparer.GetPDFLinkObjectsFromWorksheet(accessedWorksheet);
 var downloadFolder = access.DownloadFolder;
 var wantTjeck = access.WantCheckForFormerDownloads();
 Console.WriteLine("Download starter, tag en kop kaffe");
-var notDownloadetBefore = preparer.PerformEarlierDownloadetStatus(listOfURLObjects, downloadFolder, wantTjeck);
+var notDownloadetBefore = await preparer.PrepareForDownload(accessedWorksheet, downloadFolder, wantTjeck);
+
 var httpDownloadService = new DownloadService(uni, httpClient);
-httpDownloadService.TryDownloadToDestination(notDownloadetBefore, downloadFolder, wantTjeck);
+await httpDownloadService.DownloadAllAsync(notDownloadetBefore, downloadFolder);
 
 Console.WriteLine("Starting WriteToExcel...");
 var writer = new ExcelWriter(downloadFolder, httpDownloadService._failedDownloads, preparer._succeededDownloads);
@@ -41,4 +42,3 @@ Console.ReadLine();
 Console.WriteLine("Done!!!");
 Console.ReadLine();
 
-public record URLObject(int id, string? url1, string? url2);

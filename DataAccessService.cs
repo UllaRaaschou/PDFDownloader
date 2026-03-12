@@ -3,14 +3,20 @@ using Serilog;
 
 public class DataAccessService 
 {  
-    public string ExcelFolder { get; set; }
-    public string DownloadFolder { get; set; }
+    public string ExcelFolder { get; set; } = string.Empty;
+    public string DownloadFolder { get; set; } = string.Empty;
 
-    public void SetDownloadFolder(string functionalFilePath ) 
-    {
-        ExcelFolder = Path.GetDirectoryName(functionalFilePath);
+    public void SetDownloadFolder(string functionalFilePath )     
+    {        
+        ExcelFolder = Path.GetDirectoryName(functionalFilePath) ?? string.Empty;
         DownloadFolder = Path.Combine(ExcelFolder, "PDFs");
     }
+    
+    /// <summary>
+    /// Creates XLworkbook from userinput
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="IOException"></exception>
     public XLWorkbook? CreateWorkbook()
     {
         Console.Write("Indtast filsti: ");
@@ -31,6 +37,11 @@ public class DataAccessService
         }
     }
 
+    /// <summary>
+    /// If inputpath from user contains "", trim them to get a valid inputPath for workbook
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     public string GetFunctionalInputPath(string input)
     {
         string? inputPath = input;
@@ -44,6 +55,12 @@ public class DataAccessService
         return inputPath;
     }
 
+    /// <summary>
+    /// Validates, that userinput for worksheet is int
+    /// </summary>
+    /// <param name="workbook"></param>
+    /// <returns>relevant worksheet</returns>
+    /// <exception cref="IOException"></exception>
     public IXLWorksheet? AccessWorkSheet(XLWorkbook workbook)
     {
         Console.Write("Hvilket nummer har det aktuelle worksheet?");
