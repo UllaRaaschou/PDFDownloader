@@ -7,12 +7,11 @@ using PDFDownloader;
 public partial class DownloadPreparer
 {     
     private readonly IUniversalDownloadedFiles _universalDownloadedFiles;
-    private readonly DataAccessService _access;
+    
 
-    public DownloadPreparer(IUniversalDownloadedFiles uni, DataAccessService access)
+    public DownloadPreparer(IUniversalDownloadedFiles uni)
     {
-        _universalDownloadedFiles = uni;    
-        _access = access;
+        _universalDownloadedFiles = uni;           
     }
 
    public List<PDFLinkObject> PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantCheck) 

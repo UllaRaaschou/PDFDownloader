@@ -7,17 +7,14 @@ using System.Threading.Tasks;
 namespace PDFDownloader.Services
 {
     public class OutputExcelService
-    {
-        private string _functionalFilePath;
-        public OutputExcelService(string functionalFilePath)
-        {
-            _functionalFilePath = functionalFilePath;
-        }
-        public string OutputExcelFolder { get; set; } = string.Empty;
-        public void SetOutputExcelFolder(string functionalFilePath)
+    {      
+        public OutputExcelService() { }
+       
+        //public string OutputExcelFolder { get; set; } = string.Empty;
+        public string SetOutputExcelFolder(string functionalFilePath)
         {
             var excelDirectory = Path.GetDirectoryName(functionalFilePath) ?? string.Empty;
-            OutputExcelFolder = Path.Combine(excelDirectory, "Oversigt");
+            return Path.Combine(excelDirectory, "Oversigt");
         }
     }
 }

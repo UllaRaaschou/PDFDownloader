@@ -1,22 +1,29 @@
 ﻿using PDFDownloader.Data;
+using PDFDownloader.Services;
 using Serilog;
 
 namespace PDFDownloader
 {
     public class ApplicationOrchestrator
     {
-        private readonly DataAccessService _dataAccess;
+        private readonly InputService _inputService;
+        private readonly OutputExcelService _outputExcelService;
+        private readonly WorkBookService _workBookService;
         private readonly DownloadPreparer _preparer;
         private readonly DownloadService _downloadService;
         private readonly IUniversalDownloadedFiles _universalDownloadedFiles;
 
         public ApplicationOrchestrator(
-            DataAccessService dataAccess,
+            InputService inputService,
+            OutputExcelService outputExcelService,
+            WorkBookService workBookService,
             DownloadPreparer preparer,
             DownloadService downloadService,
             IUniversalDownloadedFiles universalDownloadedFiles)
         {
-            _dataAccess = dataAccess;
+            _inputService = inputService;
+            _outputExcelService = outputExcelService;
+            _workBookService = workBookService;
             _preparer = preparer;
             _downloadService = downloadService;
             _universalDownloadedFiles = universalDownloadedFiles;
@@ -25,23 +32,22 @@ namespace PDFDownloader
         public async Task<bool> RunAsync()
         {
             try
-            {                
-                var workbook = _dataAccess.CreateWorkbook(); 
-                var worksheet = _dataAccess.AccessWorkSheet(workbook);  
+            {
+                var filePath = _inputService.GetInputExcelPath();
+                var downloadFolder = _workBookService.SetDownloadFolder(filePath);
+                var workbook = _workBookService.CreateWorkbook(filePath); 
+                var worksheet = _workBookService.TryAccessWorkSheet(workbook, _inputService.GetWorkSheetNumber());  
+                var outputExcelFolder = _outputExcelService.SetOutputExcelFolder(filePath);
+                var wantCheck = _inputService.WantCheckForFormerDownloads();
 
-              
                 if (workbook == null || worksheet == null)
                 {
                     Console.WriteLine("Fejl: Kunne ikke åbne Excel-fil eller arbejdsark");
                     return false;
-                }
-                               
-                var downloadFolder = _dataAccess.DownloadFolder;
-                var wantCheck = _dataAccess.WantCheckForFormerDownloads();
-                             
+                }                             
+                            
                 Console.WriteLine("Download starter, tag en kop kaffe");
-                var notDownloadedBefore = _preparer.PrepareForDownload(worksheet, downloadFolder, wantCheck);
-                          
+                var notDownloadedBefore = _preparer.PrepareForDownload(worksheet, downloadFolder, wantCheck);                          
                 await _downloadService.DownloadAllAsync(notDownloadedBefore, downloadFolder);
 
                 Console.WriteLine("Starting WriteToExcel...");

@@ -14,17 +14,14 @@ namespace PDFDownloader.Services
 
         public string DownloadFolder { get; set; } = string.Empty;
 
-        public WorkBookService(string functionalFilePath)
-        {
-            SetDownloadFolder(functionalFilePath);
-
-        }
+        public WorkBookService() { }
+       
 
 
-        public void SetDownloadFolder(string functionalFilePath)
+        public string SetDownloadFolder(string functionalFilePath)
         {
             var directory = Path.GetDirectoryName(functionalFilePath) ?? string.Empty;
-            DownloadFolder = Path.Combine(directory, "PDFs");
+            return Path.Combine(directory, "PDFs");
         }
 
 
