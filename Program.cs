@@ -17,6 +17,14 @@ var access = new DataAccessService();
 var workbook = access.CreateWorkbook();
 var accessedWorksheet = access.AccessWorkSheet(workbook);
 
+if (workbook == null || accessedWorksheet == null)
+{
+    Log.Error("Failed to initialize workbook or worksheet");
+    Console.WriteLine("Fejl: Kunne ikke åbne Excel-fil eller arbejdsark");
+    Console.ReadLine();
+    return;
+}
+
 
 var uni = new UniversalDownloadedFiles();
 var httpClient = new HttpClient();
@@ -24,17 +32,17 @@ var httpClient = new HttpClient();
 
 
 var preparer = new DownloadPreparer(uni, access);
-var listOfURLObjects = preparer.GetPDFLinkObjectsFromWorksheet(accessedWorksheet);
+
 var downloadFolder = access.DownloadFolder;
-var wantTjeck = access.WantCheckForFormerDownloads();
+var wantCheck = access.WantCheckForFormerDownloads();
 Console.WriteLine("Download starter, tag en kop kaffe");
-var notDownloadetBefore = await preparer.PrepareForDownload(accessedWorksheet, downloadFolder, wantTjeck);
+var notDownloadedBefore = preparer.PrepareForDownload(accessedWorksheet, downloadFolder, wantCheck);
 
 var httpDownloadService = new DownloadService(uni, httpClient);
-await httpDownloadService.DownloadAllAsync(notDownloadetBefore, downloadFolder);
+await httpDownloadService.DownloadAllAsync(notDownloadedBefore, downloadFolder);
 
 Console.WriteLine("Starting WriteToExcel...");
-var writer = new ExcelWriter(downloadFolder, httpDownloadService._failedDownloads, preparer._succeededDownloads);
+var writer = new ExcelWriter(downloadFolder, httpDownloadService._failedDownloads, httpDownloadService._succeededDownloads);
 await writer.WriteToExcel(downloadFolder);
 Console.WriteLine("WriteToExcel completed!");
 //Console.WriteLine(Path.GetTempPath());

@@ -5,43 +5,41 @@ using System.Collections.Concurrent;
 using PDFDownloader;
 
 public partial class DownloadPreparer
-{   
-    public ConcurrentBag<string>? _succeededDownloads; 
-    private readonly IUniversalDownloadetFiles _universalDownloadetFiles;
+{     
+    private readonly IUniversalDownloadedFiles _universalDownloadedFiles;
     private readonly DataAccessService _access;
 
-    public DownloadPreparer(IUniversalDownloadetFiles uni, DataAccessService access)
+    public DownloadPreparer(IUniversalDownloadedFiles uni, DataAccessService access)
     {
-        _universalDownloadetFiles = uni;    
+        _universalDownloadedFiles = uni;    
         _access = access;
     }
 
-   public async Task<List<PDFLinkObject>> PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantTjeck) 
+   public List<PDFLinkObject> PrepareForDownload(IXLWorksheet workSheet, string downloadFolder, bool wantCheck) 
     { 
         var listOfPDFLinkObjects = GetPDFLinkObjectsFromWorksheet(workSheet);
-        var notDownloadetBefore = new List<PDFLinkObject>();
-        if (wantTjeck == true)
-        {
-            notDownloadetBefore = ReturnListOfPDFLinksNotDownloadetBefore(listOfPDFLinkObjects);
-        }
-        notDownloadetBefore = listOfPDFLinkObjects;
-        return notDownloadetBefore;
+        var notDownloadedBefore = new List<PDFLinkObject>();
+        if (wantCheck == true)
+            notDownloadedBefore = ReturnListOfPDFLinksNotDownloadedBefore(listOfPDFLinkObjects);        
+        else
+            notDownloadedBefore = listOfPDFLinkObjects;
+        return notDownloadedBefore;
     }
 
-    public List<PDFLinkObject> ReturnListOfPDFLinksNotDownloadetBefore(List<PDFLinkObject> listOfURLObjects)
+    public List<PDFLinkObject> ReturnListOfPDFLinksNotDownloadedBefore(List<PDFLinkObject> listOfURLObjects)
     {
-        var notDownloadetBefore = new List<PDFLinkObject>();
+        var notDownloadedBefore = new List<PDFLinkObject>();
         foreach (var obj in listOfURLObjects)
         {
             if (
-                _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
-                _universalDownloadetFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))
+                _universalDownloadedFiles.UniDownloadedFiles.Contains(obj.url1 ?? "") ||
+                _universalDownloadedFiles.UniDownloadedFiles.Contains(obj.url2 ?? ""))
             {
                 continue;
             }
-            notDownloadetBefore.Add(obj);        
+            notDownloadedBefore.Add(obj);        
         }
-        return notDownloadetBefore;
+        return notDownloadedBefore;
     }
 
     /// <summary>

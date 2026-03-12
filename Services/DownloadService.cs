@@ -7,11 +7,11 @@ using System.Collections.Concurrent;
     
 public class DownloadService : IDownloadService 
 {
-    private IUniversalDownloadetFiles _uni;
+    private IUniversalDownloadedFiles _uni;
     private readonly HttpClient _httpClient;
     public ConcurrentBag<(string url, string error)> _failedDownloads;
-    private readonly ConcurrentBag<string> _succeededDownloads;
-    public DownloadService(IUniversalDownloadetFiles uni, HttpClient httpClient)
+    public ConcurrentBag<string> _succeededDownloads;
+    public DownloadService(IUniversalDownloadedFiles uni, HttpClient httpClient)
     {
         _uni = uni;
         _httpClient = httpClient;
@@ -59,8 +59,8 @@ public class DownloadService : IDownloadService
             Log.Error("Filen blev ikke oprettet: {FilePath}", filePath);
         }
 
-        var downloadetFiles =  new List<string> {url};
-        _uni.UniDownloadedFiles.AddRange(downloadetFiles);
+        var downloadedFiles =  new List<string> {url};
+        _uni.UniDownloadedFiles.AddRange(downloadedFiles);
     }
 
     private async Task DownloadWithFallbackAsync(PDFLinkObject obj, string downloadFolder)

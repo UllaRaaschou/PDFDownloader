@@ -34,7 +34,7 @@ namespace PDFDownloader
 
             row++;
 
-            sheet.Cell(row++, 1).Value = "Downloadet:";
+            sheet.Cell(row++, 1).Value = "Downloaded:";
 
 
             foreach (var item in _succeededDownloads)
