@@ -50,11 +50,8 @@ namespace PDFDownloader
                 var notDownloadedBefore = _preparer.PrepareForDownload(worksheet, downloadFolder, wantCheck);                          
                 await _downloadService.DownloadAllAsync(notDownloadedBefore, downloadFolder);
 
-                Console.WriteLine("Starting WriteToExcel...");
-
                 var writer = _downloadService.CreateResultWriter(outputExcelFolder);
-                await writer.WriteToExcel();               
-                Console.WriteLine("WriteToExcel completed!");
+                await writer.WriteToExcel();
 
                 return true;
             }
